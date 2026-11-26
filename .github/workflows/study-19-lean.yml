@@ -1,0 +1,39 @@
+name: Study 19 Lean research check
+on:
+  push:
+    paths:
+      - 'studies/formal/study-19/**'
+      - '.github/workflows/study-19-lean.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Lean
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain leanprover/lean4:v4.19.0
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Check source and axiom reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          lean --version
+          if grep -En '(^|[^A-Za-z_])(sorry|admit|axiom|unsafe)([^A-Za-z_]|$)' studies/formal/study-19/Generative.lean; then
+            echo "Forbidden proof escape or new axiom declaration"
+            exit 1
+          fi
+          lean -DwarningAsError=true studies/formal/study-19/Generative.lean | tee study-19-lean.log
+          if grep -q 'sorryAx' study-19-lean.log; then exit 1; fi
+      - name: Preserve check output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: study-19-lean-log
+          path: study-19-lean.log
+          if-no-files-found: ignore
