@@ -118,9 +118,14 @@ inductive Earlier : Snapshot → Snapshot → Prop where
 
 theorem earlier_trans {a b c : Snapshot} (p : Earlier a b) (q : Earlier b c) :
     Earlier a c := by
+  revert p
   induction q with
-  | direct b => exact Earlier.extend p
-  | extend q ih => exact Earlier.extend ih
+  | direct b =>
+    intro p
+    exact Earlier.extend p
+  | extend q ih =>
+    intro p
+    exact Earlier.extend (ih p)
 
 theorem earlier_lift {a b : Snapshot} (h : Earlier a b) :
     Earlier (repeatMark a) (repeatMark b) := by
@@ -147,7 +152,7 @@ theorem earlier_cancel (a b : Snapshot) :
   | repeatMark b ih =>
     intro h
     cases h with
-    | direct _ => exact Earlier.direct a
+    | direct => exact Earlier.direct a
     | extend h => exact Earlier.extend (ih h)
 
 theorem earlier_irrefl (a : Snapshot) : ¬ Earlier a a := by
@@ -180,7 +185,7 @@ theorem no_intermediate (a b : Snapshot) :
     Earlier a b → Earlier b (repeatMark a) → False := by
   intro h k
   cases k with
-  | direct _ => exact earlier_irrefl a h
+  | direct => exact earlier_irrefl a h
   | extend k => exact earlier_irrefl a (earlier_trans h k)
 
 /- T75: uniqueness of the comparison criterion under explicit conditions. -/
