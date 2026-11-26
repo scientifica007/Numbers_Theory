@@ -120,7 +120,7 @@ theorem earlier_trans {a b c : Snapshot} (p : Earlier a b) (q : Earlier b c) :
     Earlier a c := by
   revert p
   induction q with
-  | direct b =>
+  | direct =>
     intro p
     exact Earlier.extend p
   | extend q ih =>
@@ -130,7 +130,7 @@ theorem earlier_trans {a b c : Snapshot} (p : Earlier a b) (q : Earlier b c) :
 theorem earlier_lift {a b : Snapshot} (h : Earlier a b) :
     Earlier (repeatMark a) (repeatMark b) := by
   induction h with
-  | direct a => exact Earlier.direct (repeatMark a)
+  | direct => exact Earlier.direct (repeatMark a)
   | extend h ih => exact Earlier.extend ih
 
 theorem earlier_unit (a : Snapshot) : Earlier unit (repeatMark a) := by
@@ -270,7 +270,7 @@ theorem order_unique (Q : Snapshot → Snapshot → Prop)
   have forwardReach : ∀ {x y}, Earlier x y → Q x y := by
     intro x y h
     induction h with
-    | direct x => exact growth x
+    | direct => exact growth x
     | extend h ih => exact trans ih (growth _)
   constructor
   · intro h
